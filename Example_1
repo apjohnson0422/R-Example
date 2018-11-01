@@ -1,0 +1,208 @@
+ ## begin by loading in the statcast data from 2018
+ ## data obtained through method described by Bill Petti on his website for Baseballr
+ x2018dat <- read.table("x2018data.txt", sep="\t")
+ ## now create subsets of the data set separating when the defense shifts and when they do not
+ x2018shift <- { subset(x2018dat, if_fielding_alignment != "Standard" | of_fielding_alignment != "Standard")}
+ x2018noshift <- { subset(x2018dat, if_fielding_alignment == "Standard" & of_fielding_alignment == "Standard")}
+ ### create plots comparing the types of pitches thrown with a shift and without a shift behind them
+ plot(x2018shift$pitch_type)
+ plot(x2018noshift$pitch_type)
+ ### when comparing the two, there are few differences in the proportion of pitches thrown
+ ## this suggests pitchers do not alter their pitching style due to the shift
+################################################################################
+##Examination of Matt Carpenter's spray chart
+ ###use the same statcast data for 2018 as before, but also need data from 2015
+ x2015data <- read.table("x2015data.txt", sep ="\t")
+ ### write function to determine the percentage of plays the defense shifts for a certain player
+ shift_percentage_2018 <- function(batterid){x2018t <- subset(x2018dat, batter == batterid) 
+  x2018battershift <- subset(x2018t, if_fielding_alignment != "Standard" | of_fielding_alignment != "Standard") 
+  totalshift <- nrow(x2018battershift) 
+  total <- nrow(x2018t) 
+  totalshift/total*100}
+ ### Use Carpenter's MLBid (572761)
+ shift_percentage_2018("572761")
+1] 89.09537
+ ## Carpenter faced a shift 89% of plays in the 2018 season
+ ## rewrite the function to work for 2015
+ shift_percentage_2015 <- function(batterid){x2015t <- subset(x2015data, batter == batterid) 
+ x2015battershift <- subset(x2015t, if_fielding_alignment != "Standard" | of_fielding_alignment != "Standard") 
+  totalshift <- nrow(x2015battershift) 
+  total <- nrow(x2015t) 
+  totalshift/total*100}
+ ## Check Carpenter's shift percentage for 2015
+ shift_percentage_2015("572761")
+1] 22.80014
+ #He only faced the shift 22.8% of the time in 2015
+ ##Now that we know the difference in shift percentages, let's examine the spray charts for 2015 and 2018
+ ##first create a subset of the 2018 and 2015 data for when Carp puts the ball in play
+ Carpinplay2018 <- subset(x2018dat, batter == "572761" & type == "X")
+ Carpinplay2015 <- subset(x2015data, batter == "572761" & type == "X")
+ ### now go ahead and use the ggplot function to plot the spray charts
+ ## The points for where the ball was fielded in the statcast data need to be adjusted as they are imperfect. Here I will adjust the points hc_x and hc_y by making the coordinates x=hc_x-125.42 and y=198.27-hc_y. These are not exact, but provide a fairly accurate estimate
+ x2018location0 <- ggplot(data=Carpinplay2018, aes(x=hc_x-125.42, y=198.27-hc_y))
+ x2018location1 <- x2018location0 + geom_point(aes(color=events))
+ x2018location1
+ ### The output is an approximate spray chart for the 2018 season
+ ## There are many points bunched up around the space between first and second base which were field outs due to the shift
+ ### now for 2015
+ x2015location0 <-  ggplot(data=Carpinplay2015, aes(x=hc_x-125.42, y=198.27-hc_y))
+ x2015location1 <- x2015location0 + geom_point(aes(color=events))
+ x2015location1
+ #### now the output is an approximate spray chart for the 2015 season
+ ### the spray charts look fairly similar, with a large portions of hits bunched between the area approximately between first and second base
+ ## the shift may have taken away a few of the singles present in the 2015 season, however the vast diffference in the percentage of plays shifted on would suggest more drastic changes between the two seasons
+ #############################################################################################
+  ### Now I want to examine the relationship between wins and shifting
+ ## To do this I will rework the shift percentage function from earlier to work with with teams instead of players
+ shift_percentage_teams <- function(team){x2018t <- subset(x2018dat, home_team == team | away_team == team)
+  Defensetop <- subset(x2018t, home_team == team & inning_topbot == "Top")
+  Defensebottom <- subset(x2018t, away_team == team & inning_topbot == "Bot")
+  Topshift <- subset(Defensetop, if_fielding_alignment != "Standard" | of_fielding_alignment != "Standard")
+  Bottomshift <- subset(Defensebottom, if_fielding_alignment != "Standard" | of_fielding_alignment != "Standard")
+  Toptotal <- nrow(Topshift)
+  Bottomtotal <- nrow(Bottomshift)
+  totalshift <- Toptotal+Bottomtotal 
+  total <- nrow(x2018t) 
+  totalshift/total*100}
+ ## Now to write a function to write the winning percentage of a team
+ ## Need different data set for this, use the standings data from baseball reference
+ x2018standings <- read.csv("x2018standings.csv", sep = ",")
+ Win_pct <- function(team){x2018teamstanding <- subset(x2018standings, Tm == team)
+ x2018teamstanding$W/x2018teamstanding$G*100}
+ ## now to determine values for the shift percentages and win percentages of all 30 teams
+ {ARI_shift <- shift_percentage("ARI")
+ ARI_win <- Win_pct("ARI")
+ ATL_shift <- shift_percentage("ATL")
+ ATL_win <- Win_pct("ATL")
+ BAL_shift <- shift_percentage("BAL")
+ BAL_win <- Win_pct("BAL")
+ BOS_shift <- shift_percentage("BOS")
+ BOS_win <- Win_pct("BOS")
+ CHC_shift <- shift_percentage("CHC")
+ CHC_win <- Win_pct("CHC")
+ CHW_shift <- shift_percentage("CHW")
+ CHW_win <- Win_pct("CHW")
+ CHW_shift <- shift_percentage("CWS")
+ CIN_shift <- shift_percentage("CIN")
+ CIN_win <- Win_pct("CIN")
+ CLE_shift <- shift_percentage("CLE")
+ CLE_win <- Win_pct("CLE")
+ COL_shift <- shift_percentage("COL")
+ COL_win <- Win_pct("COL")
+ DET_shift <- shift_percentage("DET")
+ DET_win <- Win_pct("DET")
+ HOU_win <- Win_pct("HOU")
+ KCR_shift <- shift_percentage("KC")
+ KCR_win <- Win_pct("KCR")
+ LAA_shift <- shift_percentage("LAA")
+ LAA_win <- Win_pct("LAA")
+ LAD_shift <- shift_percentage("LAD")
+ LAD_win <- Win_pct("LAD")
+ MIA_shift <- shift_percentage("MIA")
+ MIA_win <- Win_pct("MIA")
+ MIL_shift <- shift_percentage("MIL")
+ MIL_win <- Win_pct("MIL")
+ MIN_shift <- shift_percentage("MIN")
+ MIN_win <- Win_pct("MIN")
+ NYM_shift <- shift_percentage("NYM")
+ NYM_win <- Win_pct("NYM")
+ NYY_shift <- shift_percentage("NYY")
+ NYY_win <- Win_pct("NYY")
+ OAK_shift <- shift_percentage("OAK")
+ OAK_win <- Win_pct("OAK")
+ PHI_shift <- shift_percentage("PHI")
+ PHI_win <- Win_pct("PHI")
+ PIT_shift <- shift_percentage("PIT")
+ PIT_win <- Win_pct("PIT")
+ SDP_shift <- shift_percentage("SDP")
+ SDP_win <- Win_pct("SDP")
+ SDP_shift <- shift_percentage("SD")
+ SEA_shift <- shift_percentage("SEA")
+ SEA_win <- Win_pct("SEA")
+ SFG_shift <- shift_percentage("SFG")
+ SFG_shift <- shift_percentage("SF")
+ SFG_win <- Win_pct("SFG")
+ STL_shift <- shift_percentage("STL")
+ STL_win <- Win_pct("STL")
+ TBR_shift <- shift_percentage("TBR")
+ TBR_shift <- shift_percentage("TB")
+ TBR_win <- Win_pct("TBR")
+ TEX_shift <- shift_percentage("TEX")
+ TEX_win <- Win_pct("TEX")
+ TOR_shift <- shift_percentage("TOR")
+ TOR_win <- Win_pct("TOR")
+ WSN_shift <- shift_percentage("WSN")
+ WSN_shift <- shift_percentage("WSH")
+ WSN_win <- Win_pct("WSN")}
+ View(shift_percentage_teams)
+ {ARI_shift <- shift_percentage_teams("ARI")
+ ARI_win <- Win_pct("ARI")
+ ATL_shift <- shift_percentage_teams("ATL")
+ ATL_win <- Win_pct("ATL")
+ BAL_shift <- shift_percentage_teams("BAL")
+ BAL_win <- Win_pct("BAL")
+ BOS_shift <- shift_percentage_teams("BOS")
+ BOS_win <- Win_pct("BOS")
+ CHC_shift <- shift_percentage_teams("CHC")
+ CHC_win <- Win_pct("CHC")
+ CHW_shift <- shift_percentage_teams("CHW")
+ CHW_win <- Win_pct("CHW")
+ CHW_shift <- shift_percentage_teams("CWS")
+ CIN_shift <- shift_percentage_teams("CIN")
+ CIN_win <- Win_pct("CIN")
+ CLE_shift <- shift_percentage_teams("CLE")
+ CLE_win <- Win_pct("CLE")
+ COL_shift <- shift_percentage_teams("COL")
+ COL_win <- Win_pct("COL")
+ DET_shift <- shift_percentage_teams("DET")
+ DET_win <- Win_pct("DET")
+ HOU_shift <- shift_percentage_teams("HOU")
+ HOU_win <- Win_pct("HOU")
+ KCR_shift <- shift_percentage_teams("KC")
+ KCR_win <- Win_pct("KCR")
+ LAA_shift <- shift_percentage_teams("LAA")
+ LAA_win <- Win_pct("LAA")
+ LAD_shift <- shift_percentage_teams("LAD")
+ LAD_win <- Win_pct("LAD")
+ MIA_shift <- shift_percentage_teams("MIA")
+ MIA_win <- Win_pct("MIA")
+ MIL_shift <- shift_percentage_teams("MIL")
+ MIL_win <- Win_pct("MIL")
+ MIN_shift <- shift_percentage_teams("MIN")
+ MIN_win <- Win_pct("MIN")
+ NYM_shift <- shift_percentage_teams("NYM")
+ NYM_win <- Win_pct("NYM")
+ NYY_shift <- shift_percentage_teams("NYY")
+ NYY_win <- Win_pct("NYY")
+ OAK_shift <- shift_percentage_teams("OAK")
+ OAK_win <- Win_pct("OAK")
+ PHI_shift <- shift_percentage_teams("PHI")
+ PHI_win <- Win_pct("PHI")
+ PIT_shift <- shift_percentage_teams("PIT")
+ PIT_win <- Win_pct("PIT")
+ SDP_shift <- shift_percentage_teams("SDP")
+ SDP_win <- Win_pct("SDP")
+ SDP_shift <- shift_percentage_teams("SD")
+ SEA_shift <- shift_percentage_teams("SEA")
+ SEA_win <- Win_pct("SEA")
+ SFG_shift <- shift_percentage_teams("SFG")
+ SFG_shift <- shift_percentage_teams("SF")
+ SFG_win <- Win_pct("SFG")
+ STL_shift <- shift_percentage_teams("STL")
+ STL_win <- Win_pct("STL")
+ TBR_shift <- shift_percentage_teams("TBR")
+ TBR_shift <- shift_percentage_teams("TB")
+ TBR_win <- Win_pct("TBR")
+ TEX_shift <- shift_percentage_teams("TEX")
+ TEX_win <- Win_pct("TEX")
+ TOR_shift <- shift_percentage_teams("TOR")
+ TOR_win <- Win_pct("TOR")
+ WSN_shift <- shift_percentage_teams("WSN")
+ WSN_shift <- shift_percentage_teams("WSH")
+ WSN_win <- Win_pct("WSN")
+ }
+ #### Now put the values into vectors and plot them
+ shift_pcts <-{ c(ARI_shift, ATL_shift, BAL_shift, BOS_shift, CHC_shift, CHW_shift, CIN_shift, CLE_shift, COL_shift, DET_shift, HOU_shift, KCR_shift, LAA_shift, LAD_shift, MIA_shift, MIL_shift, MIN_shift, NYM_shift, NYY_shift, OAK_shift, PHI_shift, PIT_shift, SDP_shift, SEA_shift, SFG_shift, STL_shift, TBR_shift, TEX_shift, TOR_shift, WSN_shift)}
+ win_pcts <- {c(ARI_win, ATL_win, BAL_win, BOS_win, CHC_win, CHW_win, CIN_win, CLE_win, COL_win, DET_win, HOU_win, KCR_win, LAA_win, LAD_win, MIA_win, MIL_win, MIN_win, NYM_win, NYY_win, OAK_win, PHI_win, PIT_win, SDP_win, SEA_win, SFG_win, STL_win, TBR_win, TEX_win, TOR_win, WSN_win)}
+ plot(shift_pcts, win_pcts, xlab = "Percentage of Plays with a Nontraditional Defensive Alignment (Shift)", ylab = "Percentage of Games Won")
+ ## the plot does not suggest any relationship between the two, but we can learn that most of the MLB shifts somewhere between 15 and 20 percent of plays
